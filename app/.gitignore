@@ -1,0 +1,7 @@
+.venv/
+.local-data/
+web/node_modules/
+web/dist/
+tests/artifacts/
+__pycache__/
+*.pyc

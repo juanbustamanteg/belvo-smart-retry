@@ -1,0 +1,431 @@
+<title>Smart Retry Lo-fi Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400;700&display=swap">
+<style>
+/* Layout: a wireframe board. Screens run top to bottom in flow order; each frame has its design notes beside it. */
+:root{
+  --paper:#eef0f2; --frame:#ffffff; --ink:#22262b; --line:#9aa2ab; --fill:#e1e5e9; --muted:#5d656e;
+  --pencil:#2f5fb3; --pencil-soft:#dbe5f6;
+  --f-ui:"IBM Plex Sans",system-ui,sans-serif; --f-data:"IBM Plex Mono",ui-monospace,monospace; --f-note:"Kalam","Comic Sans MS",cursive;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#16191c; --frame:#1f2327; --ink:#e3e6e9; --line:#5b636b; --fill:#2c3136; --muted:#a0a8b0;
+  --pencil:#8fb3f2; --pencil-soft:#24324a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#16191c; --frame:#1f2327; --ink:#e3e6e9; --line:#5b636b; --fill:#2c3136; --muted:#a0a8b0;
+  --pencil:#8fb3f2; --pencil-soft:#24324a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:14px/1.5 var(--f-ui);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:40px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.head{display:grid;gap:10px}
+.eyebrow{font:500 12px var(--f-data);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.head h1{font:600 30px/1.15 var(--f-ui)}
+.head p{margin:0;max-width:72ch;color:var(--muted)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:13px var(--f-data)}
+.flow a{color:var(--ink);text-decoration:none;border:1px solid var(--line);padding:3px 8px;background:var(--frame)}
+.flow a:hover,.flow a:focus-visible{border-color:var(--pencil);color:var(--pencil)}
+.flow span{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:10px;vertical-align:middle;margin-right:6px;border:1px solid var(--line)}
+
+/* A screen row: frame + notes */
+.screen{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start;scroll-margin-top:16px}
+@media (max-width:900px){.screen{grid-template-columns:minmax(0,1fr)}}
+.label{grid-column:1/-1;display:flex;gap:12px;align-items:baseline;border-top:1px dashed var(--line);padding-top:16px}
+.label b{font:500 13px var(--f-data);color:var(--pencil)}
+.label h2{font:600 20px var(--f-ui)}
+.label small{color:var(--muted);font:12px var(--f-data);margin-left:auto}
+
+.frame{background:var(--frame);border:1.5px solid var(--ink);min-width:0;overflow:hidden}
+.chrome{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1.5px solid var(--ink);font:12px var(--f-data);color:var(--muted)}
+.chrome i{width:9px;height:9px;border:1.5px solid var(--line);border-radius:50%}
+.chrome span{margin-left:10px;border:1px solid var(--line);padding:1px 10px;flex:1;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.unoff{padding:4px 14px;border-bottom:1px solid var(--line);font:11px var(--f-data);color:var(--muted);background:var(--fill)}
+.app{display:grid;grid-template-columns:150px minmax(0,1fr);min-height:300px}
+@media (max-width:620px){.app{grid-template-columns:minmax(0,1fr)}.side{display:none}}
+.top{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.top strong{font-weight:600}.top .who{margin-left:auto;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.side{border-right:1px solid var(--line);padding:14px 10px;display:grid;gap:6px;align-content:start;font-size:13px}
+.side div{padding:5px 8px;border:1px solid transparent}
+.side .on{border-color:var(--ink);background:var(--fill)}
+.main{padding:18px;display:grid;gap:14px;align-content:start;min-width:0}
+.main h3{font:600 17px var(--f-ui)}
+.sub{color:var(--muted);font-size:13px;margin:0}
+
+.btn{display:inline-block;border:1.5px solid var(--ink);padding:5px 12px;font-size:13px;background:var(--frame);white-space:nowrap}
+.btn.p{background:var(--ink);color:var(--frame)}
+.btn.ghost{border-style:dashed;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.row .r{margin-left:auto}
+.field{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.input{border:1.5px solid var(--line);height:32px;background:var(--frame)}
+.drop{border:1.5px dashed var(--ink);padding:18px;display:grid;gap:6px;justify-items:center;text-align:center;font-size:13px}
+.box{border:1px solid var(--line);padding:12px;display:grid;gap:6px}
+.box.soft{background:var(--fill);border-color:transparent}
+.ph{background:repeating-linear-gradient(135deg,var(--fill) 0 6px,transparent 6px 12px);border:1px solid var(--line);height:14px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-family:var(--f-data);font-size:12.5px;overflow-wrap:anywhere}
+.seg{display:inline-flex;border:1.5px solid var(--ink)}
+.seg span{padding:3px 12px;font:13px var(--f-data);border-left:1px solid var(--line)}
+.seg span:first-child{border-left:0}.seg .on{background:var(--ink);color:var(--frame)}
+.disc{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+.disc::before{content:"\25B8  "}
+.disc.open::before{content:"\25BE  "}
+
+.metrics{display:flex;flex-wrap:wrap;gap:22px;padding:10px 0;border-block:1px solid var(--line);font-size:12px;color:var(--muted)}
+.metrics b{display:block;font:500 20px var(--f-data);color:var(--ink);font-variant-numeric:tabular-nums}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1.5px solid var(--ink)}
+.tabs span{padding:6px 12px;font-size:13px;border:1.5px solid transparent;border-bottom:0;margin-bottom:-1.5px}
+.tabs .on{border-color:var(--ink);background:var(--frame);font-weight:600}
+.tabs em{font:normal 12px var(--f-data);color:var(--muted);margin-left:6px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:540px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:12px}
+td.n{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.chip{display:inline-block;border:1px solid var(--ink);padding:0 6px;font:11px var(--f-data);white-space:nowrap}
+.chip.dash{border-style:dashed}
+.chip.solid{background:var(--ink);color:var(--frame)}
+.pager{font:12px var(--f-data);color:var(--muted)}
+.state{border:1.5px solid var(--ink);padding:10px 12px;display:grid;gap:6px;font-size:13px}
+.state b{font-weight:600}
+.minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+textarea{all:unset}
+.ta{border:1.5px solid var(--line);min-height:60px;padding:6px;font-size:12px;color:var(--muted)}
+
+/* Notes beside each frame */
+.notes{font:17px/1.35 var(--f-note);color:var(--pencil);display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.notes li{display:grid;grid-template-columns:22px 1fr;gap:6px}
+.notes li::before{content:attr(data-n);font:700 13px var(--f-data);border:1.5px solid var(--pencil);border-radius:50%;width:20px;height:20px;display:grid;place-items:center;margin-top:2px}
+.notes .rule{font:12px var(--f-data);color:var(--muted);display:block;margin-top:2px}
+.pin{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--pencil);color:var(--frame);font:700 11px var(--f-data);vertical-align:middle;margin-left:4px;flex:none}
+
+.foot{display:grid;gap:14px;border-top:1.5px solid var(--ink);padding-top:20px}
+.foot h2{font:600 18px var(--f-ui)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.cols ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px;max-width:60ch}
+.cols h3{font:600 14px var(--f-ui)}
+code{font:12.5px var(--f-data)}
+a:focus-visible{outline:2px solid var(--pencil);outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+<header class="head">
+  <div class="eyebrow">Belvo PM challenge · Unofficial prototype · Lo-fi v1 · 2026-11-02</div>
+  <h1>Smart Retry: operator and reviewer screens</h1>
+  <p>Low-fidelity blueprint for the local MVP (React + FastAPI + SQLite). Screens follow the E2E flow in master section 7. Counts are the 7-day reference results for the original files (3,062 loans). Example rows are real loan IDs from the portfolio, classified with the section 5 rules.</p>
+  <nav class="flow" aria-label="Screens in flow order">
+    <a href="#s1">1 Sign in</a><span>→</span><a href="#s2">2 Workspace</a><span>→</span><a href="#s3">3 Prepare</a><span>→</span><a href="#s4">4 Run states</a><span>→</span><a href="#s5">5 Results</a><span>→</span><a href="#s6">6 Loan detail</a><span>→</span><a href="#s7">7 Review</a><span>→</span><a href="#s8">8 Approved output</a>
+  </nav>
+  <div class="legend">
+    <span><i style="background:var(--ink)"></i>Primary action (one per actor and state)</span>
+    <span><i style="border-style:dashed"></i>Secondary or disclosure</span>
+    <span><i style="background:repeating-linear-gradient(135deg,var(--fill) 0 3px,transparent 3px 6px)"></i>Placeholder content</span>
+    <span style="font-family:var(--f-note);color:var(--pencil);font-size:16px">Blue pencil = design note</span>
+  </div>
+</header>
+
+<!-- S1 -->
+<section class="screen" id="s1">
+  <div class="label"><b>S1</b><h2>Sign in</h2><small>Operator · Reviewer</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/login</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="main" style="max-width:360px;margin:20px auto;padding-block:20px">
+      <h3>Smart Retry</h3>
+      <p class="sub">Sign in to prepare or review a collection analysis.</p>
+      <label class="field">Email<div class="input"></div></label>
+      <label class="field">Password<div class="input"></div></label>
+      <div class="state"><b>Email or password is incorrect.</b>Check both fields and try again.</div>
+      <div><span class="btn p">Sign in</span></div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">Two seeded accounts. Server checks the password; no role dropdown here.<span class="rule">§6 Local identities</span></li>
+    <li data-n="2">Same screen handles "session expired, sign in again". It reloads saved state and never approves or restarts anything.<span class="rule">§7, E2E session scenarios</span></li>
+  </ul>
+</section>
+
+<!-- S2 -->
+<section class="screen" id="s2">
+  <div class="label"><b>S2</b><h2>Workspace</h2><small>Operator</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/workspace</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="top"><strong>Smart Retry</strong><span class="who">Operator · Demo merchant <span class="btn ghost">Sign out</span></span></div>
+    <div class="app">
+      <div class="side"><div class="on">Workspace</div><div>New analysis</div></div>
+      <div class="main">
+        <div class="row"><h3>Analyses</h3><span class="btn p r">New analysis</span></div>
+        <div class="box soft">
+          <div class="row"><span class="chip">History available</span><span style="font-size:13px">Payment history preloaded · 253,006 requests · 3,033 loans covered</span></div>
+          <div class="disc">Source details (file identity, date range, timezone)</div>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Analysis</th><th>Revision</th><th>Wait period</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Portfolio 2025-11-11</td><td class="n">r2</td><td class="n">7 days</td><td><span class="chip solid">Approved</span></td><td class="n">2026-11-02</td><td><u>Open</u></td></tr>
+            <tr><td>Portfolio 2025-11-11</td><td class="n">r1</td><td class="n">3 days</td><td><span class="chip dash">Changes requested</span></td><td class="n">2026-11-02</td><td><u>Open</u></td></tr>
+            <tr><td><div class="ph" style="width:120px"></div></td><td></td><td></td><td><span class="chip">Draft</span></td><td></td><td></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">History is shown, not uploaded. The operator only brings the portfolio.<span class="rule">§7 flow B1</span></li>
+    <li data-n="2">Status chip uses a word plus a style, never color alone. Old revisions stay read-only.<span class="rule">§7 Analysis lifecycle</span></li>
+    <li data-n="3">If history is missing, this banner says "History unavailable · fix in local setup" and New analysis is disabled. No transaction upload as a workaround.</li>
+  </ul>
+</section>
+
+<!-- S3 -->
+<section class="screen" id="s3">
+  <div class="label"><b>S3</b><h2>Prepare analysis</h2><small>Operator · Draft → Validated</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/analyses/new</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="top"><strong>Smart Retry</strong><span class="who">Operator</span></div>
+    <div class="app">
+      <div class="side"><div>Workspace</div><div class="on">New analysis</div></div>
+      <div class="main">
+        <h3>New analysis</h3>
+        <div class="drop">
+          <b>PaymentsPM_Challenge_loan_info.csv</b>
+          <span class="sub">3,062 rows · 142.9 KB</span>
+          <span class="btn ghost">Replace file</span>
+        </div>
+        <div class="box">
+          <div class="row"><span class="chip solid">Valid</span><b style="font-size:13px">Portfolio checked</b></div>
+          <dl class="kv">
+            <dt>Loans</dt><dd>3,062 (unique IDs)</dd>
+            <dt>Outstanding</dt><dd>MXN 10,952,619.00</dd>
+            <dt>Loans with history</dt><dd>3,033 · 29 without history</dd>
+            <dt>Evaluated at</dt><dd>2025-11-11 23:59:59 America/Mexico_City (fixed)</dd>
+          </dl>
+        </div>
+        <div class="field">Wait after an insufficient-funds failure
+          <div class="seg"><span>3 days</span><span class="on">7 days</span><span>14 days</span></div>
+        </div>
+        <div class="disc">Analysis settings and file identity (SHA-256)</div>
+        <div class="row"><span class="btn ghost">Back</span><span class="btn p r">Generate results</span></div>
+      </div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">Upload leads. Validation runs on upload; the primary button stays disabled until the pair is valid.<span class="rule">§4 Input contract</span></li>
+    <li data-n="2">Cooldown is the only policy setting. 7 is the reference, not a proven optimum.<span class="rule">§5 Active configuration</span></li>
+    <li data-n="3">Cutoff is shown but not editable. Never use today's date.</li>
+    <li data-n="4">Invalid file shows row-level errors (see S4) and keeps the operator on this screen.</li>
+  </ul>
+</section>
+
+<!-- S4 -->
+<section class="screen" id="s4">
+  <div class="label"><b>S4</b><h2>Run and error states</h2><small>Validating · Running · Failed · Interrupted</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/analyses/r3</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="main">
+      <div class="minis">
+        <div class="state"><b>Portfolio has errors</b>
+          <span>3 rows can't be read. Row 14: <code>total_amount_outstanding</code> is empty. Row 220: duplicate <code>loan_id</code>.</span>
+          <span class="sub">Fix the file and upload it again.</span>
+          <div><span class="btn">Upload corrected file</span></div></div>
+        <div class="state"><b>Generating results</b>
+          <span>Classifying 3,062 loans with a 7-day wait.</span>
+          <div class="ph" style="width:60%"></div>
+          <span class="sub">Results appear only when every loan is classified.</span></div>
+        <div class="state"><b>Processing was interrupted</b>
+          <span>No results were saved. Nothing can be submitted from this attempt.</span>
+          <div><span class="btn p">Run again</span></div></div>
+        <div class="state"><b>Results don't reconcile</b>
+          <span>3,061 of 3,062 loans were classified. The run was rolled back.</span>
+          <div><span class="btn p">Run again</span></div></div>
+      </div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">No partial results, ever. Failed or interrupted runs can't be submitted or exported.<span class="rule">§7 subflow, atomic commit</span></li>
+    <li data-n="2">After a server restart, a run left "Running" is shown as Interrupted. Retry is an explicit click.<span class="rule">§7 Analysis lifecycle</span></li>
+    <li data-n="3">Error copy says what broke and how to fix it, with the row number.</li>
+  </ul>
+</section>
+
+<!-- S5 -->
+<section class="screen" id="s5">
+  <div class="label"><b>S5</b><h2>Results</h2><small>Operator · Ready</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/analyses/r3/results?queue=retry</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="top"><strong>Smart Retry</strong><span class="who">Operator</span></div>
+    <div class="main">
+      <div class="row"><h3>Portfolio 2025-11-11 · r3</h3><span class="chip">Ready for review</span><span class="btn p r">Submit for review</span></div>
+      <p class="sub">Submitting sends all 3,062 loans in this revision, not only the queue you are viewing. Approval does not send any debit.</p>
+      <div class="metrics">
+        <span><b>3,062</b>loans classified</span>
+        <span><b>400</b>retry candidates</span>
+        <span><b>1,949</b>waiting</span>
+        <span><b>713</b>need attention</span>
+        <span><b>7 days</b>wait period</span>
+      </div>
+      <div class="tabs"><span class="on">Retry candidates<em>400</em></span><span>Waiting<em>1,949</em></span><span>Needs attention<em>713</em></span></div>
+      <div class="row"><div class="input" style="width:200px;height:28px" aria-label="Search loan ID"></div><span class="pager r">Showing 1–3 of 400</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>Loan</th><th>Bank</th><th>Outstanding (MXN)</th><th>Why</th><th>Next check</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="n">7762351674</td><td>mx_azteca</td><td class="n">2,920.00</td><td>Insufficient funds. Wait period has passed.</td><td class="n">2025-09-02</td><td><u>View details</u> <span class="pin">6</span></td></tr>
+          <tr><td class="n">7762421558</td><td>mx_hsbc</td><td class="n">12,559.00</td><td>Insufficient funds. Wait period has passed.</td><td class="n">2025-10-08</td><td><u>View details</u></td></tr>
+          <tr><td class="n">7762554429</td><td>mx_azteca</td><td class="n">5,544.00</td><td>Insufficient funds. Wait period has passed.</td><td class="n">2025-09-02</td><td><u>View details</u></td></tr>
+        </tbody>
+      </table></div>
+      <div class="box soft">
+        <span class="eyebrow">Other tabs, same table</span>
+        <div class="tw"><table>
+          <tbody>
+            <tr><td><span class="chip dash">Waiting</span></td><td class="n">7762307148</td><td class="n">3,050.00</td><td>Insufficient funds on 2025-11-11. Check again after the wait.</td><td class="n">2025-11-18</td></tr>
+            <tr><td><span class="chip">Needs attention</span></td><td class="n">7762309510</td><td class="n">4,380.00</td><td>Account cancelled ("Cuenta cancelada"). Investigate before any retry.</td><td class="n">—</td></tr>
+            <tr><td><span class="chip">Needs attention</span></td><td class="n">7763060359</td><td class="n">4,928.00</td><td>Last attempt was charged back. Investigate the reversal.</td><td class="n">—</td></tr>
+            <tr><td><span class="chip">Needs attention</span></td><td class="n">7763464413</td><td class="n">1,425.00</td><td>No payment history for this loan. Check the link to history.</td><td class="n">—</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="row"><span class="btn ghost">Change file or wait period (new revision)</span></div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">Full-run totals sit above the tabs. Visible-row count ("1–3 of 400") is kept separate.<span class="rule">§5 Operational result contract</span></li>
+    <li data-n="2">Tabs are views of the same saved rows. They never change what is submitted or exported.</li>
+    <li data-n="3">"Why" is plain language. Reason codes (SOFT_FAILURE_WINDOW_ELAPSED…) live in the detail, not here.<span class="rule">§7 Operational hierarchy</span></li>
+    <li data-n="4">Next check only for the clean insufficient-funds paths. Needs attention shows a dash; no invented deadline.</li>
+    <li data-n="5">Source messages stay in Spanish, quoted.</li>
+    <li data-n="6">No amount column: recommended amount is always null.</li>
+  </ul>
+</section>
+
+<!-- S6 -->
+<section class="screen" id="s6">
+  <div class="label"><b>S6</b><h2>Loan detail</h2><small>Side panel over Results</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/analyses/r3/loans/7762351674</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="main">
+      <div class="row"><h3>Loan 7762351674</h3><span class="chip solid">Retry candidate</span><span class="btn ghost r">Close</span></div>
+      <div class="box soft">
+        <b style="font-size:13px">What to do</b>
+        <span style="font-size:13px">Include it in the candidate list you submit for review. Before any real debit, production still has to confirm authorization, account status, current debt and client policy.</span>
+      </div>
+      <dl class="kv">
+        <dt>Outstanding</dt><dd>MXN 2,920.00 (portfolio snapshot, not reduced by past payments)</dd>
+        <dt>Bank</dt><dd>mx_azteca</dd>
+        <dt>Overdue</dt><dd>830 days</dd>
+      </dl>
+      <div class="disc open">Payment evidence</div>
+      <dl class="kv">
+        <dt>Latest attempt</dt><dd>2025-08-22 12:53:36 UTC · 1 request</dd>
+        <dt>Result</dt><dd>failed · code 04 · "Cuenta con insuficiencia de fondos"</dd>
+        <dt>Request ID</dt><dd>d98bbbc9-a5c0-4dcd-8b3d-c69afc6411bf</dd>
+        <dt>Rule matched</dt><dd>9 of 9 · SOFT_FAILURE_WINDOW_ELAPSED</dd>
+        <dt>Clock</dt><dd>Completed 2025-08-26 (Mexico City) → 77 days to 2025-11-11 ≥ 7</dd>
+        <dt>Next check</dt><dd>2025-09-02</dd>
+        <dt>Action code</dt><dd>PREPARE_RETRY_HANDOFF</dd>
+      </dl>
+      <div class="disc">Earlier attempts for this loan</div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">Panel opens with the next step, then the facts. Evidence is one click down.<span class="rule">§7 Operational hierarchy</span></li>
+    <li data-n="2">Evidence = the whole latest batch, the first rule that matched and the date math. This is where a reviewer audits the logic.</li>
+    <li data-n="3">No override button. Neither role can change a decision or pick an amount.<span class="rule">§6 Capabilities</span></li>
+    <li data-n="4">For an ambiguous batch (e.g. 7764852545, 6 simultaneous requests with repeated amounts) the evidence lists all 6 rows.</li>
+  </ul>
+</section>
+
+<!-- S7 -->
+<section class="screen" id="s7">
+  <div class="label"><b>S7</b><h2>Review</h2><small>Reviewer · Submitted</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/analyses/r3/review</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="top"><strong>Smart Retry</strong><span class="who">Reviewer <span class="btn ghost">Sign out</span></span></div>
+    <div class="main">
+      <div class="row"><h3>Portfolio 2025-11-11 · r3</h3><span class="chip">Awaiting reviewer</span><span class="btn p r">Approve results</span></div>
+      <p class="sub">Submitted by Operator on 2026-11-02. You are approving the analysis for all 3,062 loans in revision r3. Approval does not create or send any payment.</p>
+      <div class="metrics">
+        <span><b>3,062</b>loans</span><span><b>400</b>retry</span><span><b>1,949</b>waiting</span><span><b>713</b>attention</span><span><b>7 days</b>wait</span>
+      </div>
+      <div class="ph" style="height:70px" aria-label="Same tabs and table as Results, read-only"></div>
+      <div class="disc open">Request changes</div>
+      <div class="ta">Tell the operator what to change. Required.</div>
+      <div class="row"><span class="btn">Send back with comment</span></div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">Reviewer must be a different person from the creator. Backend enforces it, not just the button.<span class="rule">§6, §13</span></li>
+    <li data-n="2">Same tables as Results, read-only. One primary action: Approve.</li>
+    <li data-n="3">Return needs a comment. The operator sees it on their Results screen and starts a new revision.<span class="rule">§7 Returned → Draft</span></li>
+    <li data-n="4">If the operator withdrew or replaced r3 meanwhile, Approve fails with "This revision changed. Reload."</li>
+  </ul>
+</section>
+
+<!-- S8 -->
+<section class="screen" id="s8">
+  <div class="label"><b>S8</b><h2>Approved output</h2><small>Both roles · Approved (read-only)</small></div>
+  <div class="frame">
+    <div class="chrome"><i></i><i></i><i></i><span>localhost:8000/analyses/r3/output</span></div>
+    <div class="unoff">Product challenge · Unofficial prototype</div>
+    <div class="main">
+      <div class="row"><h3>Approved results · r3</h3><span class="chip solid">Approved</span><span class="btn p r">Download approved CSV</span></div>
+      <div class="box">
+        <dl class="kv">
+          <dt>Approved by</dt><dd>Reviewer · 2026-11-02 <span class="ph" style="display:inline-block;width:50px;height:10px"></span></dd>
+          <dt>Run / revision</dt><dd><span class="ph" style="display:inline-block;width:160px;height:10px"></span></dd>
+          <dt>Configuration</dt><dd>7-day wait · evaluated 2025-11-11T23:59:59-06:00</dd>
+          <dt>Sources</dt><dd>loan_info 667ce705… · payment_requests 27b60878…</dd>
+          <dt>Rows</dt><dd>3,062 · 400 retry · 1,949 waiting · 713 need attention</dd>
+        </dl>
+      </div>
+      <div class="state"><b>This file is not a payment instruction.</b>It lists analytical decisions with no amount. Every row has <code>is_executable=false</code>. Live checks on authorization, account, debt and client policy are still pending.</div>
+      <div class="disc">CSV columns (29)</div>
+    </div>
+  </div>
+  <ul class="notes">
+    <li data-n="1">Only Approved revisions can be downloaded. No draft export anywhere.<span class="rule">§8 Result CSV</span></li>
+    <li data-n="2">The summary repeats identity and totals, so a detached file can be traced back.</li>
+    <li data-n="3">Download is the end of the flow. It is a handoff, not a recovered payment.</li>
+  </ul>
+</section>
+
+<footer class="foot">
+  <h2>From lo-fi to MVP</h2>
+  <div class="cols">
+    <div><h3>Each screen needs</h3>
+      <ul>
+        <li>S1 server login, revocable session, expiry</li>
+        <li>S2 runs list and history availability</li>
+        <li>S3 upload, validate, set cooldown</li>
+        <li>S4 run job with atomic commit and Interrupted recovery</li>
+        <li>S5–S6 paginated decisions and per-loan evidence</li>
+        <li>S7 submit, withdraw, approve, return</li>
+        <li>S8 export restricted to Approved</li>
+      </ul></div>
+    <div><h3>Questions to settle before building</h3>
+      <ul>
+        <li>Detail as side panel or full page? Board assumes side panel so the queue stays in view.</li>
+        <li>Should Waiting sort by next check date by default?</li>
+        <li>Should Needs attention group by reason, or stay one flat list with a reason filter?</li>
+      </ul></div>
+    <div><h3>Out of scope in this board</h3>
+      <ul>
+        <li>Visual identity and polish</li>
+        <li>Payment execution, amounts, scheduling</li>
+        <li>Multi-merchant tenancy, user admin</li>
+      </ul></div>
+  </div>
+</footer>
+
+</div>
