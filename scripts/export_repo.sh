@@ -8,7 +8,7 @@ SRC="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="${1:?usage: export_repo.sh TARGET_DIR}"
 mkdir -p "$DEST"
 rsync -a --delete \
-  --exclude '.git' --exclude '.venv' --exclude 'node_modules' --exclude 'dist' --exclude '.local-data' \
+  --exclude '.git' --exclude '.venv' --exclude 'node_modules' --exclude 'dist' --exclude 'dist-demo' --exclude '.local-data' \
   --exclude 'tests/artifacts' --exclude '__pycache__' --exclude '*.pyc' --exclude '.DS_Store' \
   --exclude 'tsconfig.tsbuildinfo' --exclude 'test-results' \
   "$SRC/app" "$DEST/"

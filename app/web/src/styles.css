@@ -34,7 +34,7 @@ textarea { width: 100%; min-height: 90px; }
 .mono { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
 .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 th.num, td.num { text-align: right; }
-.boot { padding: 40px; }
+.boot { padding: 60px 24px; max-width: 640px; margin: 0 auto; display: grid; gap: 12px; }
 
 .unofficial { padding: 5px 16px; font: 12px var(--mono); color: var(--muted); background: var(--surface); border-bottom: 1px solid var(--line); }
 .top { display: flex; align-items: center; gap: 16px; padding: 12px 24px; border-bottom: 1px solid var(--line); }

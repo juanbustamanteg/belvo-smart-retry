@@ -7,3 +7,4 @@ app/web/node_modules/
 app/web/dist/
 app/tests/artifacts/
 app/web/test-results/
+app/web/dist-demo/

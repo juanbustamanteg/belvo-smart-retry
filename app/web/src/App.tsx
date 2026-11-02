@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { api, ApiError, setCsrf, setUnauthorizedHandler, type Decision, type DecisionRow, type Experiment, type LoanDetail, type Page, type Policy, type Run,
+import { BrowserRouter, HashRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { api, ApiError, DEMO, setCsrf, setUnauthorizedHandler, type Decision, type DecisionRow, type Experiment, type LoanDetail, type Page, type Policy, type Run,
   type Session, type Summary, type Workspace } from "./api";
 import { DECISION_CHIP, INVESTIGATE, QUEUE_LABEL, REASON_LABEL, RULES, STATUS_LABEL, WHAT_TO_DO, fmtCents, fmtInt, fmtMoney,
   fmtWhen, short, why } from "./copy";
@@ -15,22 +15,31 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const setSession = useCallback((s: Session | null) => { setCsrf(s?.csrf_token ?? null); setSessionState(s); }, []);
+  const [bootStep, setBootStep] = useState(DEMO ? "Starting the browser demo…" : "Loading…");
   useEffect(() => {
     setUnauthorizedHandler(() => { setSession(null); setNotice("Your session ended. Sign in again to continue."); });
-    api.session().then(setSession).catch(() => setSession(null)).finally(() => setLoading(false));
+    const start = DEMO ? import("./demo/backend").then(m => m.boot(setBootStep)) : Promise.resolve();
+    start.then(() => api.session()).then(setSession).catch(() => setSession(null)).finally(() => setLoading(false));
   }, [setSession]);
-  if (loading) return <p className="boot">Loading…</p>;
+  if (loading) return (
+    <div className="boot" role="status">
+      <h1>Smart Retry</h1>
+      <p>{bootStep}</p>
+      {DEMO && <p className="muted">This demo runs entirely in your browser: the same SQL rules as the app, in SQLite compiled to WebAssembly. Loading the 253,006-request payment history takes a few seconds.</p>}
+    </div>
+  );
+  const Router = DEMO ? HashRouter : BrowserRouter;
   return (
     <AuthCtx.Provider value={{ session, setSession, notice, setNotice }}>
-      <BrowserRouter>
-        <div className="unofficial">Product challenge · Unofficial prototype · Not a Belvo product</div>
+      <Router>
+        <div className="unofficial">Product challenge · Unofficial prototype · Not a Belvo product{DEMO && " · Browser demo: runs only in this tab; refreshing resets it"}</div>
         <Routes>
           <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/" element={<Protected><WorkspacePage /></Protected>} />
           <Route path="/runs/:id" element={<Protected><RunPage /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </AuthCtx.Provider>
   );
 }
@@ -106,6 +115,7 @@ function Login() {
       <h1>Smart Retry</h1>
       <p className="muted">Sign in to prepare or review a collection analysis.</p>
       {notice && <div className="state" role="status">{notice}</div>}
+      {DEMO && <div className="state" role="note"><strong>Demo accounts</strong><span>Sign in as <b>operator</b> to prepare an analysis, then as <b>reviewer</b> to approve it. The password for both is <b>demo</b>.</span></div>}
       <form onSubmit={submit}>
         <label htmlFor="username">Username</label>
         <input id="username" autoComplete="username" value={username} onChange={e => setUsername(e.target.value)} required />
@@ -343,6 +353,13 @@ function Prepare({ run, setRun }: { run: Run; setRun: (r: Run) => void }) {
             ) : (
               <><strong>Upload the loan portfolio</strong><span className="muted">CSV with loan_id, payment_method_bank, loan_amount, total_amount_outstanding, overdue_at, overdue_days</span></>
             )}
+            {DEMO && !run.sources.portfolio && (
+              <button className="primary" disabled={busy || working || !can("upload_portfolio")} onClick={async () => {
+                const { DATA_URLS } = await import("./demo/backend");
+                const text = await (await fetch(DATA_URLS.portfolio)).text();
+                onFile(new File([text], "PaymentsPM_Challenge_loan_info.csv", { type: "text/csv" }));
+              }}>Use the challenge portfolio</button>
+            )}
             <label className="button-like">
               {run.sources.portfolio ? "Replace file" : "Choose CSV file"}
               <input ref={fileRef} type="file" accept=".csv,text/csv" className="sr-only" disabled={busy || working || !can("upload_portfolio")}
@@ -454,7 +471,7 @@ function Results({ run, setRun }: { run: Run; setRun: (r: Run) => void }) {
         <RunHeader run={run}>
           {can("submit") && <button className="primary" onClick={() => act(() => api.submit(run))} disabled={busy}>Submit for review</button>}
           {can("review") && <button className="primary" onClick={() => act(() => api.review(run, "approve"))} disabled={busy}>Approve and release payments</button>}
-          {can("download_results") && <a className="button-like primary" href={api.csvUrl(run.run_id)} download>Download approved CSV</a>}
+          {can("download_results") && <button className="primary" onClick={() => api.download(api.csvUrl(run.run_id), "Belvo_Smart_Retry_Results.csv").catch(setError)}>Download approved CSV</button>}
           {can("withdraw") && <button onClick={() => act(() => api.withdraw(run))} disabled={busy}>Withdraw</button>}
           {can("create_revision") && <button className="ghost" onClick={() => setReviseOpen(o => !o)} aria-expanded={reviseOpen}>New revision</button>}
         </RunHeader>
@@ -653,7 +670,7 @@ function PaymentRequests({ run, setRun }: { run: Run; setRun: (r: Run) => void }
         <p className="hint">The split copies the most common historical practice; it isn't a validated policy. Open any retry candidate to see its three requests. Authorization, account, current debt and client policy are still unchecked.</p>
       )}
       {can("download_payment_requests") && p.requests > 0 && (
-        <div className="row"><a className="button-like primary" href={api.paymentsCsvUrl(run.run_id)} download>Download payment requests CSV</a>
+        <div className="row"><button className="primary" onClick={() => api.download(api.paymentsCsvUrl(run.run_id), `Belvo_Smart_Retry_Payment_Requests_${run.run_id.slice(0, 8)}.csv`).catch(setError)}>Download payment requests CSV</button>
           <span className="hint">Same nine columns as the payment history. Status is pending; the bank fills the rest.</span></div>
       )}
       {p.status === "Released" && can("import_responses") && p.requests > 0 && (
@@ -668,7 +685,17 @@ function PaymentRequests({ run, setRun }: { run: Run; setRun: (r: Run) => void }
             <option value="bank">Bank responses</option>
             <option value="synthetic_demo">Synthetic demo data</option>
           </select>
-          <div><button className="primary" disabled={busy || !origin}>Import responses</button></div>
+          <div className="row"><button className="primary" disabled={busy || !origin}>Import responses</button>
+            {DEMO && <button type="button" disabled={busy} onClick={async () => {
+              setBusy(true); setError(null);
+              try {
+                const csv = await api.simulateResponses(run);
+                await api.importResponses(run, new File([csv], "SYNTHETIC_responses.csv", { type: "text/csv" }), "synthetic_demo");
+                setRun(await api.run(run.run_id));
+              } catch (err) { setError(err as ApiError); } finally { setBusy(false); }
+            }}>Demo only: import synthetic responses</button>}
+          </div>
+          {DEMO && <span className="hint">In the app, synthetic responses come from a script outside the portal. This demo button uses the same method (one historical outcome per loan) and labels everything that follows as synthetic.</span>}
         </form>
       )}
       {p.responses && (

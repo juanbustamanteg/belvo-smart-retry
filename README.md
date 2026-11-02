@@ -4,6 +4,15 @@
 
 > Unofficial product-challenge prototype. Not a Belvo product. Smart Retry never sends money.
 
+## Try it now, no install
+
+**Live demo: https://juanbustamanteg.github.io/belvo-smart-retry/**
+
+- **Accounts.** Sign in as `operator` (password `demo`), keep the default policy, click New analysis, then Use the challenge portfolio and Generate results. Submit for review, sign out, sign in as `reviewer` (password `demo`) and click Approve and release payments.
+- **How it runs.** The demo runs entirely in your browser. It uses the same SQL rules as the app, running in SQLite compiled to WebAssembly over the original challenge files, and gives the same results as the server (400 / 1,949 / 713 with fatigue off; 398 / 1,951 / 713 with the default policy).
+- **Simplifications.** The passwords are fixed for the demo. Data stays in your tab and resets when you refresh. A clearly labeled demo button imports synthetic bank responses.
+- **Use a desktop browser.** Loading the 253,006-request history takes a few seconds.
+
 ## See it in 2 minutes
 
 - **Happy path demo (61 s):** [deliverables/Belvo_Smart_Retry_Demo_Happy_Path.mp4](deliverables/Belvo_Smart_Retry_Demo_Happy_Path.mp4)

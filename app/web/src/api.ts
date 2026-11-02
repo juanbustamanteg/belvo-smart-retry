@@ -79,6 +79,8 @@ export class ApiError extends Error {
   constructor(public status: number, public body: ApiErrorBody) { super(body.message); }
 }
 
+export const DEMO = import.meta.env.VITE_DEMO === "1";
+
 let csrf: string | null = null; // kept in memory only, never in browser storage
 let onUnauthorized: (() => void) | null = null;
 export const setUnauthorizedHandler = (fn: () => void) => { onUnauthorized = fn; };
@@ -93,6 +95,18 @@ async function request<T>(method: string, path: string, opts: { body?: unknown; 
   if (opts.version !== undefined) headers["If-Match"] = `"${opts.version}"`;
   if (opts.idempotent) headers["Idempotency-Key"] = newKey();
   if (opts.login) headers["X-Requested-With"] = "SmartRetry";
+  if (DEMO) {
+    const { handle } = await import("./demo/backend");
+    const r = await handle(method, path, { body: opts.body, form: opts.form, headers });
+    if (r.status === 204) return undefined as T;
+    const data = r.text !== undefined ? r.text : r.data;
+    if (r.status >= 400) {
+      const body = (data as { error: ApiErrorBody }).error;
+      if (r.status === 401 && !opts.login && onUnauthorized) onUnauthorized();
+      throw new ApiError(r.status, body);
+    }
+    return data as T;
+  }
   let res: Response;
   try {
     res = await fetch("/api/v1" + path, {
@@ -149,6 +163,21 @@ export const api = {
     form.append("origin", origin);
     return request<PaymentSet>("PUT", `/runs/${run.run_id}/payment-requests/responses`, { form, idempotent: true });
   },
-  paymentsCsvUrl: (id: string) => `/api/v1/runs/${id}/payment-requests.csv`,
-  csvUrl: (id: string) => `/api/v1/runs/${id}/results.csv`,
+  paymentsCsvUrl: (id: string) => `/runs/${id}/payment-requests.csv`,
+  /** Fetch a CSV through the API (server or browser demo) and save it with the given name. */
+  download: async (path: string, filename: string) => {
+    let text: string;
+    if (DEMO) text = await request<string>("GET", path);
+    else {
+      const res = await fetch("/api/v1" + path, { credentials: "same-origin" });
+      if (!res.ok) throw new ApiError(res.status, (await res.json()).error);
+      text = await res.text();
+    }
+    const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+  simulateResponses: (run: Run) => request<string>("POST", `/runs/${run.run_id}/payment-requests/simulate`, { body: { seed: 7 } }),
+  csvUrl: (id: string) => `/runs/${id}/results.csv`,
 };

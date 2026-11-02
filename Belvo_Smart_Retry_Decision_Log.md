@@ -132,6 +132,10 @@ Sponsor listed three primary deliverables (MVP, summary, presentation) with a re
 
 Sponsor was asked for a short deck. Made a separate copy with 14 slides (from 32) that still answers every required topic: dividers and agenda removed; scope merged with trade-offs, configuration with buttons and dashboard, results with impact, strategy options with GTM and why Belvo, roadmap with next steps and kill criteria. The full 32-slide deck is unchanged. Every slide was reviewed from a PowerPoint PDF export; a two-line title and a table overlapping a card were fixed.
 
+### D45 public repository, 2026-11-02
+
+Sponsor chose to share the MVP as a public GitHub repository including the two challenge CSVs, after being told the payment history is Belvo's data and would become publicly indexable. Published https://github.com/juanbustamanteg/belvo-smart-retry from a clean export (`scripts/export_repo.sh`): the app, both CSVs, master spec, diagnostic (local folder path redacted), decision log, challenge brief, wireframes, deliverables and deck scripts; never local data, credentials, environments or unrelated home-folder content. Verified by cloning from GitHub into an empty folder and running `./app/bootstrap.sh`: history imported with the original hash and the app served on a spare port. Updates require re-running the export into a clone and pushing.
+
 ## Future log entries
 
 ### D23 technical foundation, checked 2026-11-02
