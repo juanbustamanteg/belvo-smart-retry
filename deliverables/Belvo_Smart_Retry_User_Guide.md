@@ -4,10 +4,9 @@ Unofficial Belvo product-challenge prototype · Version 1.1 · 2026-11-02
 
 This guide explains how to install the Smart Retry MVP, run an analysis as an operator, approve it as a reviewer, and use the payment request loop. It describes the app as built. Product rules are specified in the master spec and the PRD.
 
-| Link | What it is |
-|---|---|
-| https://github.com/juanbustamanteg/belvo-smart-retry | Source code, challenge data, documents and demo videos |
-| https://juanbustamanteg.github.io/belvo-smart-retry/ | Live browser demo, no install |
+**Open the MVP: https://juanbustamanteg.github.io/belvo-smart-retry/**
+
+It runs in any desktop browser with nothing to install. Sign in as `operator` or `reviewer` with the password `demo`, then follow sections 3 to 5 of this guide.
 
 ## 0. Try it without installing
 
