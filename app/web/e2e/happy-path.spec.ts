@@ -80,7 +80,7 @@ test("E01 E12 E14 DMO01-DMO08 happy path: operator prepares, distinct reviewer a
   await expect(page.getByRole("heading", { name: "Approved results" })).toBeVisible();
   await expect(page.getByText("Approval covers the analysis, not every loan.")).toBeVisible();
   const [download] = await Promise.all([page.waitForEvent("download"),
-    page.getByRole("link", { name: "Download approved CSV" }).click()]);
+    page.getByRole("button", { name: "Download approved CSV" }).click()]);
   const raw = readFileSync((await download.path())!, "utf-8");
   const rows = parseCsv(raw);
   const counts = { RETRY: 0, WAIT: 0, REVIEW_REMEDIATE: 0 } as Record<string, number>;

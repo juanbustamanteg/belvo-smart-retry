@@ -2,6 +2,10 @@
 
 Unofficial product-challenge prototype. Implements the master spec `../Belvo_Payments_Data_Analysis.md` (sections 5, 6, 7, 8 and 13). The SQL in `sql/rules_minimal_v1.sql` is the only decision engine; the browser only renders persisted results.
 
+## Live browser demo
+
+https://juanbustamanteg.github.io/belvo-smart-retry/ runs the portal with the same SQL files in SQLite/WebAssembly; no server. Build it with `cd web && npm run build:demo` (output `web/dist-demo/`, including the two CSVs), test it with `npx playwright test -c playwright.pages.config.ts` (add `PAGES_URL=...` to test the published site), and publish `dist-demo/` plus a `.nojekyll` file to the `gh-pages` branch.
+
 ## Quick start
 
 ```sh

@@ -15,7 +15,7 @@ test("D36 D34 closed loop: draft requests reviewed, approval releases them, synt
   const panel = page.getByRole("region", { name: "Payment requests" });
   await expect(panel).toContainText("Draft · released on approval");
   await expect(panel).toContainText("1,200 for 400 retry candidates");
-  await expect(page.getByRole("link", { name: "Download payment requests CSV" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Download payment requests CSV" })).toHaveCount(0);
   const total = /Total\s*MXN ([\d,.]+)/.exec(await panel.innerText())![1];
   await expect(page.getByText(/plus the 1,200 draft payment requests below/)).toBeVisible();
 
@@ -41,7 +41,7 @@ test("D36 D34 closed loop: draft requests reviewed, approval releases them, synt
   await page.reload();
   await expect(page.getByRole("region", { name: "Payment requests" })).toContainText("Released, not sent");
   const [download] = await Promise.all([page.waitForEvent("download"),
-    page.getByRole("link", { name: "Download payment requests CSV" }).click()]);
+    page.getByRole("button", { name: "Download payment requests CSV" }).click()]);
   const requestsPath = info.outputPath("payment-requests.csv");
   await download.saveAs(requestsPath);
   const requests = parseCsv(readFileSync(requestsPath, "utf-8"));

@@ -4,6 +4,14 @@ Unofficial Belvo product-challenge prototype · Version 1.0 · 2026-11-02
 
 This guide explains how to install the Smart Retry MVP, run an analysis as an operator, approve it as a reviewer, and use the payment request loop. It describes the app as built. Product rules are specified in the master spec and the PRD.
 
+## 0. Try it without installing
+
+Open https://juanbustamanteg.github.io/belvo-smart-retry/ in a desktop browser. It runs the same rules entirely in your browser.
+- **Accounts.** Sign in as `operator` or `reviewer` with the password `demo`.
+- **Portfolio.** Use the challenge portfolio with one click.
+- **Responses.** Import synthetic bank responses with a clearly labeled demo button.
+- **Your data.** Everything stays in your tab and resets when you refresh.
+
 ## 1. Install and start
 
 You need macOS or Linux with Python 3.12 or newer (with SQLite 3.51.3 or newer) and Node 20 or newer.
